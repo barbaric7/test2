@@ -159,12 +159,6 @@
                 }
             });
         }
-
-        // Function to start listening after sending message
-        window.startListening = function () {
-            listenForMessages(currentUserId, currentRecipientId);
-            listenForMessages(currentRecipientId, currentUserId);
-        }
     </script>
     <style>
         body {
@@ -307,26 +301,32 @@
     <div id="container">
         <div id="register">
             <h1>Register</h1>
-            <input type="text" id="username" placeholder="Enter your username">
+            <input type="text" id="username" placeholder="Enter Username">
             <button onclick="registerUser()">Register</button>
         </div>
 
-        <div id="login">
+        <div id="login" style="display: none;">
             <h1>Login</h1>
-            <input type="text" id="loginId" placeholder="Enter your unique ID">
+            <input type="text" id="loginId" placeholder="Enter Unique ID">
             <button onclick="loginUser()">Login</button>
         </div>
 
-        <div id="chat">
-            <h1>Messaging Portal</h1>
-            <div id="uniqueIdDisplay"></div>
-            <button id="copyButton" onclick="copyUserId()">Copy ID</button>
+        <div id="uniqueIdDisplay"></div>
+        <button id="copyButton" onclick="copyUserId()">Copy Unique ID</button>
+
+        <div id="chat" style="display: none;">
+            <h2>Chat</h2>
+
+            <!-- Conversations list -->
             <div id="conversationList"></div>
-            <input type="text" id="recipientId" placeholder="Enter recipient's unique ID">
-            <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
-            <button onclick="sendMessage()">Send Message</button>
+
+            <!-- Chat messages display -->
             <div id="messages"></div>
-            <button onclick="startListening()">Start Listening</button>
+
+            <!-- Message input -->
+            <input type="text" id="recipientId" placeholder="Enter recipient ID">
+            <textarea id="message" placeholder="Type your message here"></textarea>
+            <button onclick="sendMessage()">Send Message</button>
         </div>
     </div>
 </body>
