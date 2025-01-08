@@ -44,7 +44,6 @@
                     document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
                     document.getElementById("register").style.display = "none";
                     document.getElementById("chat").style.display = "block";
-                    loadConversations();
                 });
             } else {
                 alert("Please enter a username.");
@@ -125,21 +124,20 @@
         function loadConversations() {
             get(ref(database, 'messages/' + currentUserId)).then((snapshot) => {
                 if (snapshot.exists()) {
-                    const conversations = snapshot.val();
+                    const recipients = Object.keys(snapshot.val());
                     const conversationList = document.getElementById("conversationList");
                     conversationList.innerHTML = ''; // Clear current list
-                    for (let recipientId in conversations) {
+                    recipients.forEach((recipientId) => {
                         const conversationItem = document.createElement("div");
                         conversationItem.innerText = `Conversation with ${recipientId}`;
                         conversationItem.classList.add("conversation-item");
                         conversationItem.onclick = () => {
-                            loadMessages(recipientId);
                             currentRecipientId = recipientId;
-                            document.getElementById("recipientId").value = recipientId; // Set recipientId
-                            document.getElementById("recipientId").disabled = true; // Disable ID input
+                            document.getElementById("recipientId").value = recipientId;
+                            loadMessages(recipientId);
                         };
                         conversationList.appendChild(conversationItem);
-                    }
+                    });
                 }
             });
         }
@@ -160,14 +158,6 @@
                     });
                 }
             });
-        }
-
-        // Allow user to write a new message
-        window.startNewMessage = function () {
-            document.getElementById("recipientId").disabled = false; // Enable recipient ID input for new message
-            document.getElementById("recipientId").value = ''; // Clear recipient input
-            document.getElementById("message").value = ''; // Clear message input
-            currentRecipientId = null;
         }
     </script>
     <style>
@@ -257,29 +247,53 @@
 
         #uniqueIdDisplay {
             margin-top: 10px;
+            font-size: 16px;
+            color: #bbb;
+            word-break: break-all;
         }
 
         #copyButton {
+            background-color: #4caf50;
+            margin-top: 10px;
             display: none;
-            background-color: #ff5722;
-            color: white;
         }
 
         #copyButton:hover {
-            background-color: #e64a19;
+            background-color: #45a049;
         }
 
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Scrollbar styling */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
         }
 
         ::-webkit-scrollbar-thumb {
-            background-color: #888;
+            background: #444;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background-color: #555;
+            background: #555;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            #container {
+                padding: 10px;
+            }
+
+            input, button {
+                font-size: 16px; /* Prevents zoom on mobile */
+            }
         }
     </style>
 </head>
@@ -310,7 +324,7 @@
             <div id="messages"></div>
 
             <!-- Message input -->
-            <input type="text" id="recipientId" placeholder="Enter recipient ID" disabled>
+            <input type="text" id="recipientId" placeholder="Enter recipient ID">
             <textarea id="message" placeholder="Type your message here"></textarea>
             <button onclick="sendMessage()">Send Message</button>
         </div>
