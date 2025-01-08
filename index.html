@@ -29,7 +29,7 @@
 
         // Generate unique ID (simpler version)
         function generateUserId(username) {
-            return `${username}-${Math.floor(Math.random() * 10000)}`;
+            return ${username}-${Math.floor(Math.random() * 10000)};
         }
 
         // Register user function
@@ -40,7 +40,7 @@
                 set(ref(database, 'users/' + currentUserId), {
                     username: username
                 }).then(() => {
-                    document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
+                    document.getElementById("uniqueIdDisplay").innerHTML = Your Unique ID: <strong>${currentUserId}</strong>;
                     document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
                     document.getElementById("register").style.display = "none";
                     document.getElementById("chat").style.display = "block";
@@ -58,7 +58,7 @@
                 // Check if the user exists
                 get(ref(database, 'users/' + currentUserId)).then((snapshot) => {
                     if (snapshot.exists()) {
-                        document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
+                        document.getElementById("uniqueIdDisplay").innerHTML = Your Unique ID: <strong>${currentUserId}</strong>;
                         document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
                         document.getElementById("login").style.display = "none";
                         document.getElementById("chat").style.display = "block";
@@ -113,7 +113,7 @@
 
                 if (message) {
                     messageElement.classList.add(message.sender === currentUserId ? "message-sender" : "message-receiver");
-                    messageElement.innerText = `${message.sender === currentUserId ? "You" : message.sender}: ${message.text}`;
+                    messageElement.innerText = ${message.sender === currentUserId ? "You" : message.sender}: ${message.text};
                     messagesDiv.appendChild(messageElement);
                 }
                 messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
@@ -129,7 +129,7 @@
                     conversationList.innerHTML = ''; // Clear current list
                     recipients.forEach((recipientId) => {
                         const conversationItem = document.createElement("div");
-                        conversationItem.innerText = `Conversation with ${recipientId}`;
+                        conversationItem.innerText = Conversation with ${recipientId};
                         conversationItem.classList.add("conversation-item");
                         conversationItem.onclick = () => {
                             currentRecipientId = recipientId;
@@ -153,11 +153,17 @@
                     Object.values(messages).forEach((message) => {
                         const messageElement = document.createElement("div");
                         messageElement.classList.add(message.sender === currentUserId ? "message-sender" : "message-receiver");
-                        messageElement.innerText = `${message.sender === currentUserId ? "You" : message.sender}: ${message.text}`;
+                        messageElement.innerText = ${message.sender === currentUserId ? "You" : message.sender}: ${message.text};
                         messagesDiv.appendChild(messageElement);
                     });
                 }
             });
+        }
+
+        // Function to start listening after sending message
+        window.startListening = function () {
+            listenForMessages(currentUserId, currentRecipientId);
+            listenForMessages(currentRecipientId, currentUserId);
         }
     </script>
     <style>
@@ -301,32 +307,26 @@
     <div id="container">
         <div id="register">
             <h1>Register</h1>
-            <input type="text" id="username" placeholder="Enter Username">
+            <input type="text" id="username" placeholder="Enter your username">
             <button onclick="registerUser()">Register</button>
         </div>
 
-        <div id="login" style="display: none;">
+        <div id="login">
             <h1>Login</h1>
-            <input type="text" id="loginId" placeholder="Enter Unique ID">
+            <input type="text" id="loginId" placeholder="Enter your unique ID">
             <button onclick="loginUser()">Login</button>
         </div>
 
-        <div id="uniqueIdDisplay"></div>
-        <button id="copyButton" onclick="copyUserId()">Copy Unique ID</button>
-
-        <div id="chat" style="display: none;">
-            <h2>Chat</h2>
-
-            <!-- Conversations list -->
+        <div id="chat">
+            <h1>Messaging Portal</h1>
+            <div id="uniqueIdDisplay"></div>
+            <button id="copyButton" onclick="copyUserId()">Copy ID</button>
             <div id="conversationList"></div>
-
-            <!-- Chat messages display -->
-            <div id="messages"></div>
-
-            <!-- Message input -->
-            <input type="text" id="recipientId" placeholder="Enter recipient ID">
-            <textarea id="message" placeholder="Type your message here"></textarea>
+            <input type="text" id="recipientId" placeholder="Enter recipient's unique ID">
+            <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
             <button onclick="sendMessage()">Send Message</button>
+            <div id="messages"></div>
+            <button onclick="startListening()">Start Listening</button>
         </div>
     </div>
 </body>
