@@ -27,48 +27,41 @@
         let currentUserId = null;
         let currentRecipientId = null;
 
-        // Generate unique ID (simpler version)
-        function generateUserId(username) {
-            return `${username}-${Math.floor(Math.random() * 10000)}`;
-        }
-
         // Register user function
         window.registerUser = function () {
             const username = document.getElementById("username").value.trim();
             if (username) {
                 currentUserId = generateUserId(username);
-                set(ref(database, 'users/' + currentUserId), {
-                    username: username
-                }).then(() => {
+                set(ref(database, 'users/' + currentUserId), { username: username })
+                .then(() => {
                     document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
-                    document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
+                    document.getElementById("copyButton").style.display = "inline-block";
                     document.getElementById("register").style.display = "none";
                     document.getElementById("chat").style.display = "block";
+                    loadPreviousChats(); // Load previous chats
                 });
             } else {
                 alert("Please enter a username.");
             }
         }
 
-        // Login existing user function
+        // Generate unique ID
+        function generateUserId(username) {
+            return `${username}-${Math.floor(Math.random() * 10000)}`;
+        }
+
+        // Login user
         window.loginUser = function () {
             const userId = document.getElementById("loginId").value.trim();
             if (userId) {
                 currentUserId = userId;
-                // Check if the user exists
-                get(ref(database, 'users/' + currentUserId)).then((snapshot) => {
-                    if (snapshot.exists()) {
-                        document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
-                        document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
-                        document.getElementById("login").style.display = "none";
-                        document.getElementById("chat").style.display = "block";
-                        loadConversations();
-                    } else {
-                        alert("User not found. Please check your ID.");
-                    }
-                });
+                document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
+                document.getElementById("copyButton").style.display = "inline-block";
+                document.getElementById("login").style.display = "none";
+                document.getElementById("chat").style.display = "block";
+                loadPreviousChats(); // Load previous chats
             } else {
-                alert("Please enter your unique ID.");
+                alert("Please enter your ID.");
             }
         }
 
@@ -91,17 +84,42 @@
                     text: messageText,
                     timestamp: Date.now()
                 };
-
-                // Push message to both sender's and recipient's Firebase paths
                 push(ref(database, 'messages/' + currentUserId + '/' + currentRecipientId), message)
                     .then(() => {
                         push(ref(database, 'messages/' + currentRecipientId + '/' + currentUserId), message);
-                        document.getElementById("message").value = ""; // Clear message input
+                        document.getElementById("message").value = "";
                     })
                     .catch(err => console.error("Error sending message: ", err));
             } else {
                 alert("Please enter both recipient ID and a message.");
             }
+        }
+
+        // Load previous chats
+        function loadPreviousChats() {
+            get(ref(database, 'messages/' + currentUserId))
+                .then(snapshot => {
+                    const chatList = document.getElementById("chatList");
+                    chatList.innerHTML = "";
+                    snapshot.forEach(childSnapshot => {
+                        const recipientId = childSnapshot.key;
+                        const chatItem = document.createElement("div");
+                        chatItem.classList.add("chat-item");
+                        chatItem.innerText = `Chat with: ${recipientId}`;
+                        chatItem.onclick = () => loadChat(recipientId);
+                        chatList.appendChild(chatItem);
+                    });
+                })
+                .catch(err => console.error("Error loading chats: ", err));
+        }
+
+        // Load the chat with a specific user
+        function loadChat(recipientId) {
+            currentRecipientId = recipientId;
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML = "";
+            listenForMessages(currentUserId, recipientId);
+            listenForMessages(recipientId, currentUserId);
         }
 
         // Listen for new messages and update UI in real-time
@@ -110,63 +128,17 @@
                 const message = snapshot.val();
                 const messagesDiv = document.getElementById("messages");
                 const messageElement = document.createElement("div");
-
                 if (message) {
                     messageElement.classList.add(message.sender === currentUserId ? "message-sender" : "message-receiver");
                     messageElement.innerText = `${message.sender === currentUserId ? "You" : message.sender}: ${message.text}`;
                     messagesDiv.appendChild(messageElement);
                 }
-                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
             });
-        }
-
-        // Load previous conversations
-        function loadConversations() {
-            get(ref(database, 'messages/' + currentUserId)).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const recipients = Object.keys(snapshot.val());
-                    const conversationList = document.getElementById("conversationList");
-                    conversationList.innerHTML = ''; // Clear current list
-                    recipients.forEach((recipientId) => {
-                        const conversationItem = document.createElement("div");
-                        conversationItem.innerText = `Conversation with ${recipientId}`;
-                        conversationItem.classList.add("conversation-item");
-                        conversationItem.onclick = () => {
-                            currentRecipientId = recipientId;
-                            document.getElementById("recipientId").value = recipientId;
-                            loadMessages(recipientId);
-                        };
-                        conversationList.appendChild(conversationItem);
-                    });
-                }
-            });
-        }
-
-        // Load messages for a specific conversation
-        function loadMessages(recipientId) {
-            const messagesDiv = document.getElementById("messages");
-            messagesDiv.innerHTML = ''; // Clear current messages
-
-            get(ref(database, 'messages/' + currentUserId + '/' + recipientId)).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const messages = snapshot.val();
-                    Object.values(messages).forEach((message) => {
-                        const messageElement = document.createElement("div");
-                        messageElement.classList.add(message.sender === currentUserId ? "message-sender" : "message-receiver");
-                        messageElement.innerText = `${message.sender === currentUserId ? "You" : message.sender}: ${message.text}`;
-                        messagesDiv.appendChild(messageElement);
-                    });
-                }
-            });
-        }
-
-        // Function to start listening after sending message
-        window.startListening = function () {
-            listenForMessages(currentUserId, currentRecipientId);
-            listenForMessages(currentRecipientId, currentUserId);
         }
     </script>
     <style>
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             background-color: #121212;
@@ -208,7 +180,7 @@
             background-color: #1565c0;
         }
 
-        #chat {
+        #register, #login, #chat {
             display: none;
         }
 
@@ -238,17 +210,6 @@
             padding: 5px;
             background-color: #2e2e2e;
             border-radius: 5px;
-        }
-
-        .conversation-item {
-            padding: 10px;
-            background-color: #333;
-            margin-bottom: 5px;
-            cursor: pointer;
-        }
-
-        .conversation-item:hover {
-            background-color: #444;
         }
 
         #uniqueIdDisplay {
@@ -298,35 +259,54 @@
             }
 
             input, button {
-                font-size: 16px; /* Prevents zoom on mobile */
+                font-size: 16px;
             }
+        }
+
+        /* Chat List */
+        #chatList {
+            margin: 10px 0;
+        }
+
+        .chat-item {
+            background-color: #333;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-item:hover {
+            background-color: #444;
         }
     </style>
 </head>
 <body>
     <div id="container">
+        <!-- Register Section -->
         <div id="register">
             <h1>Register</h1>
             <input type="text" id="username" placeholder="Enter your username">
             <button onclick="registerUser()">Register</button>
         </div>
 
+        <!-- Login Section -->
         <div id="login">
             <h1>Login</h1>
             <input type="text" id="loginId" placeholder="Enter your unique ID">
             <button onclick="loginUser()">Login</button>
         </div>
 
+        <!-- Messaging Section -->
         <div id="chat">
             <h1>Messaging Portal</h1>
             <div id="uniqueIdDisplay"></div>
             <button id="copyButton" onclick="copyUserId()">Copy ID</button>
-            <div id="conversationList"></div>
+            <div id="chatList"></div>
             <input type="text" id="recipientId" placeholder="Enter recipient's unique ID">
             <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
             <button onclick="sendMessage()">Send Message</button>
             <div id="messages"></div>
-            <button onclick="startListening()">Start Listening</button>
         </div>
     </div>
 </body>
