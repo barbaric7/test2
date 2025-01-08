@@ -44,6 +44,7 @@
                     document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
                     document.getElementById("register").style.display = "none";
                     document.getElementById("chat").style.display = "block";
+                    loadConversations();
                 });
             } else {
                 alert("Please enter a username.");
@@ -124,20 +125,19 @@
         function loadConversations() {
             get(ref(database, 'messages/' + currentUserId)).then((snapshot) => {
                 if (snapshot.exists()) {
-                    const recipients = Object.keys(snapshot.val());
+                    const conversations = snapshot.val();
                     const conversationList = document.getElementById("conversationList");
                     conversationList.innerHTML = ''; // Clear current list
-                    recipients.forEach((recipientId) => {
+                    for (let recipientId in conversations) {
                         const conversationItem = document.createElement("div");
                         conversationItem.innerText = `Conversation with ${recipientId}`;
                         conversationItem.classList.add("conversation-item");
                         conversationItem.onclick = () => {
-                            currentRecipientId = recipientId;
-                            document.getElementById("recipientId").value = recipientId;
                             loadMessages(recipientId);
+                            currentRecipientId = recipientId;
                         };
                         conversationList.appendChild(conversationItem);
-                    });
+                    }
                 }
             });
         }
@@ -272,28 +272,13 @@
             width: 8px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
-
         ::-webkit-scrollbar-thumb {
-            background: #444;
+            background-color: #888;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 600px) {
-            #container {
-                padding: 10px;
-            }
-
-            input, button {
-                font-size: 16px;
-            }
+            background-color: #555;
         }
     </style>
 </head>
@@ -324,7 +309,7 @@
             <div id="messages"></div>
 
             <!-- Message input -->
-            <input type="text" id="recipientId" placeholder="Enter recipient ID">
+            <input type="text" id="recipientId" placeholder="Enter recipient ID" disabled>
             <textarea id="message" placeholder="Type your message here"></textarea>
             <button onclick="sendMessage()">Send Message</button>
         </div>
