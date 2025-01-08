@@ -135,6 +135,8 @@
                         conversationItem.onclick = () => {
                             loadMessages(recipientId);
                             currentRecipientId = recipientId;
+                            document.getElementById("recipientId").value = recipientId; // Set recipientId
+                            document.getElementById("recipientId").disabled = true; // Disable ID input
                         };
                         conversationList.appendChild(conversationItem);
                     }
@@ -158,6 +160,14 @@
                     });
                 }
             });
+        }
+
+        // Allow user to write a new message
+        window.startNewMessage = function () {
+            document.getElementById("recipientId").disabled = false; // Enable recipient ID input for new message
+            document.getElementById("recipientId").value = ''; // Clear recipient input
+            document.getElementById("message").value = ''; // Clear message input
+            currentRecipientId = null;
         }
     </script>
     <style>
@@ -247,29 +257,20 @@
 
         #uniqueIdDisplay {
             margin-top: 10px;
-            font-size: 16px;
-            color: #bbb;
-            word-break: break-all;
         }
 
         #copyButton {
-            background-color: #4caf50;
-            margin-top: 10px;
             display: none;
+            background-color: #ff5722;
+            color: white;
         }
 
         #copyButton:hover {
-            background-color: #45a049;
+            background-color: #e64a19;
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        /* Scrollbar styling */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-thumb {
